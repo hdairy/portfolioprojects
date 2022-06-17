@@ -1,0 +1,1022 @@
+--CYCLISTIC SQL QUERIES
+--1: Summer 
+--2: Fall
+--3: Winter
+--4: Spring
+--5: Yearly
+--6: Creating Views
+
+--1:SUMMER ANALYSIS
+--UNION to combine into Summer
+SELECT * FROM Cyclistic..['2021_06_trips_v1$']
+UNION ALL
+SELECT * FROM Cyclistic..['202107-divvy-tripdata$']
+UNION ALL
+SELECT ride_id, rideable_type, started_at, ended_at, ride_length, start_station_name, CAST(start_station_id AS NCHAR), end_station_name, 
+CAST(end_station_id AS NCHAR), route, start_lat, start_lng, end_lat, end_lng, member_casual, day_of_week
+FROM Cyclistic..['2021_08_v1$']
+ORDER BY started_at
+
+--columns need to be nvarchar, nv, datetime, datetime, datetime, nv, nv, nv, nv, nv, float, float, float float, nv, float
+--casted to ensure datatype matched in all columns, 08_2021 was off
+
+
+
+
+--main CTE to run queries off of for SUMMER months
+WITH summer_months AS (
+	SELECT * FROM Cyclistic..['2021_06_trips_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['202107-divvy-tripdata$']
+	UNION ALL
+	SELECT ride_id, rideable_type, started_at, ended_at, ride_length, start_station_name, CAST(start_station_id AS NCHAR), 
+	end_station_name, CAST(end_station_id AS NCHAR), route, start_lat, start_lng, end_lat, end_lng, member_casual, day_of_week
+	FROM Cyclistic..['2021_08_v1$']
+	)
+
+
+--Most popular routes by member type for Summer
+WITH summer_months AS (
+	SELECT * FROM Cyclistic..['2021_06_trips_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['202107-divvy-tripdata$']
+	UNION ALL
+	SELECT ride_id, rideable_type, started_at, ended_at, ride_length, start_station_name, CAST(start_station_id AS NCHAR), 
+	end_station_name, CAST(end_station_id AS NCHAR), route, start_lat, start_lng, end_lat, end_lng, member_casual, day_of_week
+	FROM Cyclistic..['2021_08_v1$']
+	)
+SELECT
+  TOP 10
+  route, 
+  COUNT(route) AS route_occurance 
+FROM
+  summer_months
+WHERE 
+	member_casual LIKE 'member'
+	AND
+	route <> ''
+GROUP BY 
+  route
+ORDER BY
+	route_occurance DESC
+
+WITH summer_months AS (
+	SELECT * FROM Cyclistic..['2021_06_trips_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['202107-divvy-tripdata$']
+	UNION ALL
+	SELECT ride_id, rideable_type, started_at, ended_at, ride_length, start_station_name, CAST(start_station_id AS NCHAR), 
+	end_station_name, CAST(end_station_id AS NCHAR), route, start_lat, start_lng, end_lat, end_lng, member_casual, day_of_week
+	FROM Cyclistic..['2021_08_v1$']
+	)
+SELECT
+  TOP 10
+  route, 
+  COUNT(route) AS route_occurance 
+FROM
+  summer_months
+WHERE 
+	member_casual LIKE 'casual'
+	AND
+	route <> ''
+GROUP BY 
+  route
+ORDER BY
+	route_occurance DESC
+
+
+
+--amount of trips on each weekday by member type
+WITH summer_months AS (
+	SELECT * FROM Cyclistic..['2021_06_trips_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['202107-divvy-tripdata$']
+	UNION ALL
+	SELECT ride_id, rideable_type, started_at, ended_at, ride_length, start_station_name, CAST(start_station_id AS NCHAR), 
+	end_station_name, CAST(end_station_id AS NCHAR), route, start_lat, start_lng, end_lat, end_lng, member_casual, day_of_week
+	FROM Cyclistic..['2021_08_v1$']
+	)
+SELECT
+COUNT(ride_id) AS number_of_trips
+FROM summer_months
+WHERE member_casual = 'casual'
+GROUP BY day_of_week
+ORDER BY day_of_week
+
+WITH summer_months AS (
+	SELECT * FROM Cyclistic..['2021_06_trips_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['202107-divvy-tripdata$']
+	UNION ALL
+	SELECT ride_id, rideable_type, started_at, ended_at, ride_length, start_station_name, CAST(start_station_id AS NCHAR), 
+	end_station_name, CAST(end_station_id AS NCHAR), route, start_lat, start_lng, end_lat, end_lng, member_casual, day_of_week
+	FROM Cyclistic..['2021_08_v1$']
+	)
+SELECT
+COUNT(ride_id) AS number_of_trips
+FROM summer_months
+WHERE member_casual = 'member'
+GROUP BY day_of_week
+ORDER BY day_of_week
+
+
+--Count of unique routes by member type
+WITH summer_months AS (
+	SELECT * FROM Cyclistic..['2021_06_trips_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['202107-divvy-tripdata$']
+	UNION ALL
+	SELECT ride_id, rideable_type, started_at, ended_at, ride_length, start_station_name, CAST(start_station_id AS NCHAR), 
+	end_station_name, CAST(end_station_id AS NCHAR), route, start_lat, start_lng, end_lat, end_lng, member_casual, day_of_week
+	FROM Cyclistic..['2021_08_v1$']
+	)
+SELECT DISTINCT
+COUNT(route) AS unique_routes,
+member_casual
+FROM summer_months
+GROUP BY member_casual
+ORDER BY member_casual
+
+--usage of rideable type by member type
+WITH summer_months AS (
+	SELECT * FROM Cyclistic..['2021_06_trips_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['202107-divvy-tripdata$']
+	UNION ALL
+	SELECT ride_id, rideable_type, started_at, ended_at, ride_length, start_station_name, CAST(start_station_id AS NCHAR), 
+	end_station_name, CAST(end_station_id AS NCHAR), route, start_lat, start_lng, end_lat, end_lng, member_casual, day_of_week
+	FROM Cyclistic..['2021_08_v1$']
+	)
+SELECT DISTINCT rideable_type,
+COUNT(rideable_type) AS rideable_type_members
+FROM summer_months
+WHERE member_casual = 'member'
+GROUP BY rideable_type
+ORDER BY rideable_type
+
+WITH summer_months AS (
+	SELECT * FROM Cyclistic..['2021_06_trips_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['202107-divvy-tripdata$']
+	UNION ALL
+	SELECT ride_id, rideable_type, started_at, ended_at, ride_length, start_station_name, CAST(start_station_id AS NCHAR), 
+	end_station_name, CAST(end_station_id AS NCHAR), route, start_lat, start_lng, end_lat, end_lng, member_casual, day_of_week
+	FROM Cyclistic..['2021_08_v1$']
+	)
+SELECT DISTINCT rideable_type,
+COUNT(rideable_type) AS rideable_type_casual
+FROM summer_months
+WHERE member_casual = 'casual'
+GROUP BY rideable_type
+ORDER BY rideable_type
+
+--how many rides each day of the month by member, lat/lng and route as well
+WITH summer_months AS (
+	SELECT ride_id, CAST(started_at AS date), route, start_lat, start_lng, end_lat, end_lng
+	FROM Cyclistic..['2021_06_trips_v1$']
+	UNION ALL
+	SELECT ride_id, CAST(started_at AS date), route, start_lat, start_lng, end_lat, end_lng
+	FROM Cyclistic..['202107-divvy-tripdata$']
+	UNION ALL
+	SELECT ride_id, CAST(started_at AS date), route, start_lat, start_lng, end_lat, end_lng
+	FROM Cyclistic..['2021_08_v1$']
+	)
+SELECT
+	COUNT(ride_id)
+FROM summer_months
+GROUP BY started_at
+ORDER BY started_at
+
+
+--2: FALL ANALYSIS
+--Fall CTE UNION
+--Columns should be nv, nv, dt, dt, dt, nv, nv, nv, nv, nv, fl, fl, fl, fl, nv, fl
+SELECT * FROM Cyclistic..['2021_09_v1$']
+UNION ALL
+SELECT * FROM Cyclistic..['2021_10_v1$']
+UNION ALL
+SELECT ride_id, rideable_type, started_at, ended_at, ride_length, start_station_name, CAST(start_station_id AS NCHAR), 
+end_station_name, end_station_id, route, start_lat, start_lng, end_lat, end_lng, member_casual, day_of_week
+FROM Cyclistic..['2021_11_v1$']
+ORDER BY started_at
+
+--main CTE to run queries off of for FALL months
+WITH fall_months AS (
+	SELECT * FROM Cyclistic..['2021_09_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2021_10_v1$']
+	UNION ALL
+	SELECT ride_id, rideable_type, started_at, ended_at, ride_length, start_station_name, CAST(start_station_id AS NCHAR), 
+	end_station_name, end_station_id, route, start_lat, start_lng, end_lat, end_lng, member_casual, day_of_week
+	FROM Cyclistic..['2021_11_v1$']
+	)
+
+--Most popular routes by member type for Fall
+WITH fall_months AS (
+	SELECT * FROM Cyclistic..['2021_09_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2021_10_v1$']
+	UNION ALL
+	SELECT ride_id, rideable_type, started_at, ended_at, ride_length, start_station_name, CAST(start_station_id AS NCHAR), 
+	end_station_name, end_station_id, route, start_lat, start_lng, end_lat, end_lng, member_casual, day_of_week
+	FROM Cyclistic..['2021_11_v1$']
+	)
+SELECT
+  TOP 10
+  route, 
+  COUNT(route) AS route_occurance 
+FROM
+  fall_months
+WHERE 
+	member_casual LIKE 'member'
+	AND
+	route <> ''
+GROUP BY 
+  route
+ORDER BY
+	route_occurance DESC
+
+WITH fall_months AS (
+	SELECT * FROM Cyclistic..['2021_09_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2021_10_v1$']
+	UNION ALL
+	SELECT ride_id, rideable_type, started_at, ended_at, ride_length, start_station_name, CAST(start_station_id AS NCHAR), 
+	end_station_name, end_station_id, route, start_lat, start_lng, end_lat, end_lng, member_casual, day_of_week
+	FROM Cyclistic..['2021_11_v1$']
+	)
+SELECT
+  TOP 10
+  route, 
+  COUNT(route) AS route_occurance 
+FROM
+  fall_months
+WHERE 
+	member_casual LIKE 'casual'
+	AND
+	route <> ''
+GROUP BY 
+  route
+ORDER BY
+	route_occurance DESC
+
+
+
+--amount of trips on each weekday by member type
+WITH fall_months AS (
+	SELECT * FROM Cyclistic..['2021_09_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2021_10_v1$']
+	UNION ALL
+	SELECT ride_id, rideable_type, started_at, ended_at, ride_length, start_station_name, CAST(start_station_id AS NCHAR), 
+	end_station_name, end_station_id, route, start_lat, start_lng, end_lat, end_lng, member_casual, day_of_week
+	FROM Cyclistic..['2021_11_v1$']
+	)
+SELECT
+COUNT(ride_id) AS number_of_trips
+FROM fall_months
+WHERE member_casual = 'casual'
+GROUP BY day_of_week
+ORDER BY day_of_week
+
+WITH fall_months AS (
+	SELECT * FROM Cyclistic..['2021_09_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2021_10_v1$']
+	UNION ALL
+	SELECT ride_id, rideable_type, started_at, ended_at, ride_length, start_station_name, CAST(start_station_id AS NCHAR), 
+	end_station_name, end_station_id, route, start_lat, start_lng, end_lat, end_lng, member_casual, day_of_week
+	FROM Cyclistic..['2021_11_v1$']
+	)
+SELECT
+COUNT(ride_id) AS number_of_trips
+FROM fall_months
+WHERE member_casual = 'member'
+GROUP BY day_of_week
+ORDER BY day_of_week
+
+
+--Count of unique routes by member type
+WITH fall_months AS (
+	SELECT * FROM Cyclistic..['2021_09_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2021_10_v1$']
+	UNION ALL
+	SELECT ride_id, rideable_type, started_at, ended_at, ride_length, start_station_name, CAST(start_station_id AS NCHAR), 
+	end_station_name, end_station_id, route, start_lat, start_lng, end_lat, end_lng, member_casual, day_of_week
+	FROM Cyclistic..['2021_11_v1$']
+	)
+SELECT DISTINCT
+COUNT(route) AS unique_routes,
+member_casual
+FROM fall_months
+GROUP BY member_casual
+ORDER BY member_casual
+
+--usage of rideable type by member type
+WITH fall_months AS (
+	SELECT * FROM Cyclistic..['2021_09_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2021_10_v1$']
+	UNION ALL
+	SELECT ride_id, rideable_type, started_at, ended_at, ride_length, start_station_name, CAST(start_station_id AS NCHAR), 
+	end_station_name, end_station_id, route, start_lat, start_lng, end_lat, end_lng, member_casual, day_of_week
+	FROM Cyclistic..['2021_11_v1$']
+	)
+SELECT DISTINCT rideable_type,
+COUNT(rideable_type) AS rideable_type_members
+FROM fall_months
+WHERE member_casual = 'member'
+GROUP BY rideable_type
+ORDER BY rideable_type
+
+WITH fall_months AS (
+	SELECT * FROM Cyclistic..['2021_09_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2021_10_v1$']
+	UNION ALL
+	SELECT ride_id, rideable_type, started_at, ended_at, ride_length, start_station_name, CAST(start_station_id AS NCHAR), 
+	end_station_name, end_station_id, route, start_lat, start_lng, end_lat, end_lng, member_casual, day_of_week
+	FROM Cyclistic..['2021_11_v1$']
+	)
+SELECT DISTINCT rideable_type,
+COUNT(rideable_type) AS rideable_type_casual
+FROM fall_months
+WHERE member_casual = 'casual'
+GROUP BY rideable_type
+ORDER BY rideable_type
+
+--3: WINTER ANALYSIS
+--Winter CTE UNION
+SELECT * FROM Cyclistic..['2021_12_v1$']
+UNION ALL
+SELECT * FROM Cyclistic..['2022_01_v1$']
+UNION ALL
+SELECT * FROM Cyclistic..['2022_02_v1$']
+ORDER BY started_at
+
+--main CTE to run queries off of for WINTER months
+WITH winter_months AS (
+	SELECT * FROM Cyclistic..['2021_12_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2022_01_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2022_02_v1$']
+	)
+
+--Most popular routes by member type for Fall
+WITH winter_months AS (
+	SELECT * FROM Cyclistic..['2021_12_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2022_01_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2022_02_v1$']
+	)
+SELECT
+  TOP 10
+  route, 
+  COUNT(route) AS route_occurance 
+FROM
+  winter_months
+WHERE 
+	member_casual LIKE 'member'
+	AND
+	route <> ''
+GROUP BY 
+  route
+ORDER BY
+	route_occurance DESC
+
+WITH winter_months AS (
+	SELECT * FROM Cyclistic..['2021_12_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2022_01_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2022_02_v1$']
+	)
+SELECT
+  TOP 10
+  route, 
+  COUNT(route) AS route_occurance 
+FROM
+  winter_months
+WHERE 
+	member_casual LIKE 'casual'
+	AND
+	route <> ''
+GROUP BY 
+  route
+ORDER BY
+	route_occurance DESC
+
+
+
+--amount of trips on each weekday by member type
+WITH winter_months AS (
+	SELECT * FROM Cyclistic..['2021_12_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2022_01_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2022_02_v1$']
+	)
+SELECT
+COUNT(ride_id) AS number_of_trips
+FROM winter_months
+WHERE member_casual = 'casual'
+GROUP BY day_of_week
+ORDER BY day_of_week
+
+WITH winter_months AS (
+	SELECT * FROM Cyclistic..['2021_12_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2022_01_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2022_02_v1$']
+	)
+SELECT
+COUNT(ride_id) AS number_of_trips
+FROM winter_months
+WHERE member_casual = 'member'
+GROUP BY day_of_week
+ORDER BY day_of_week
+
+
+--Count of unique routes by member type
+WITH winter_months AS (
+	SELECT * FROM Cyclistic..['2021_12_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2022_01_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2022_02_v1$']
+	)
+SELECT DISTINCT
+COUNT(route) AS unique_routes,
+member_casual
+FROM winter_months
+GROUP BY member_casual
+ORDER BY member_casual
+
+--usage of rideable type by member type
+WITH winter_months AS (
+	SELECT * FROM Cyclistic..['2021_12_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2022_01_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2022_02_v1$']
+	)
+SELECT DISTINCT rideable_type,
+COUNT(rideable_type) AS rideable_type_members
+FROM winter_months
+WHERE member_casual = 'member'
+GROUP BY rideable_type
+ORDER BY rideable_type
+
+WITH winter_months AS (
+	SELECT * FROM Cyclistic..['2021_12_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2022_01_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2022_02_v1$']
+	)
+SELECT DISTINCT rideable_type,
+COUNT(rideable_type) AS rideable_type_casual
+FROM winter_months
+WHERE member_casual = 'casual'
+GROUP BY rideable_type
+ORDER BY rideable_type
+
+
+--4: SPRING ANALYSIS
+--Spring CTE UNION
+--Columns should be nv, nv, dt, dt, dt, nv, nv, nv, nv, nv, fl, fl, fl, fl, nv, fl
+SELECT * FROM Cyclistic..['2022_03_v1$']
+UNION ALL
+SELECT ride_id, rideable_type, started_at, ended_at, ride_length, start_station_name, CAST(start_station_id AS NCHAR), 
+end_station_name, end_station_id, route, start_lat, start_lng, end_lat, end_lng, member_casual, day_of_week 
+FROM Cyclistic..['2022_04_v1$']
+UNION ALL
+SELECT * FROM Cyclistic..['2022_05_v1$']
+ORDER BY started_at
+
+--main CTE to run queries off of for WINTER months
+WITH spring_months (
+	SELECT * FROM Cyclistic..['2022_03_v1$']
+	UNION ALL
+	SELECT ride_id, rideable_type, started_at, ended_at, ride_length, start_station_name, CAST(start_station_id AS NCHAR), 
+	end_station_name, end_station_id, route, start_lat, start_lng, end_lat, end_lng, member_casual, day_of_week 
+	FROM Cyclistic..['2022_04_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2022_05_v1$']
+	)
+
+--Most popular routes by member type for Spring
+WITH spring_months AS (
+	SELECT * FROM Cyclistic..['2022_03_v1$']
+	UNION ALL
+	SELECT ride_id, rideable_type, started_at, ended_at, ride_length, start_station_name, CAST(start_station_id AS NCHAR), 
+	end_station_name, end_station_id, route, start_lat, start_lng, end_lat, end_lng, member_casual, day_of_week 
+	FROM Cyclistic..['2022_04_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2022_05_v1$']
+	)
+SELECT
+  TOP 10
+  route, 
+  COUNT(route) AS route_occurance 
+FROM
+	spring_months
+WHERE 
+	member_casual LIKE 'member'
+	AND
+	route <> ''
+GROUP BY 
+  route
+ORDER BY
+	route_occurance DESC
+
+WITH spring_months AS (
+	SELECT * FROM Cyclistic..['2022_03_v1$']
+	UNION ALL
+	SELECT ride_id, rideable_type, started_at, ended_at, ride_length, start_station_name, CAST(start_station_id AS NCHAR), 
+	end_station_name, end_station_id, route, start_lat, start_lng, end_lat, end_lng, member_casual, day_of_week 
+	FROM Cyclistic..['2022_04_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2022_05_v1$']
+	)
+SELECT
+  TOP 10
+  route, 
+  COUNT(route) AS route_occurance 
+FROM
+  spring_months
+WHERE 
+	member_casual LIKE 'casual'
+	AND
+	route <> ''
+GROUP BY 
+  route
+ORDER BY
+	route_occurance DESC
+
+
+
+--amount of trips on each weekday by member type
+WITH spring_months AS (
+	SELECT * FROM Cyclistic..['2022_03_v1$']
+	UNION ALL
+	SELECT ride_id, rideable_type, started_at, ended_at, ride_length, start_station_name, CAST(start_station_id AS NCHAR), 
+	end_station_name, end_station_id, route, start_lat, start_lng, end_lat, end_lng, member_casual, day_of_week 
+	FROM Cyclistic..['2022_04_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2022_05_v1$']
+	)
+SELECT
+COUNT(ride_id) AS number_of_trips
+FROM spring_months
+WHERE member_casual = 'casual'
+GROUP BY day_of_week
+ORDER BY day_of_week
+
+WITH spring_months AS (
+	SELECT * FROM Cyclistic..['2022_03_v1$']
+	UNION ALL
+	SELECT ride_id, rideable_type, started_at, ended_at, ride_length, start_station_name, CAST(start_station_id AS NCHAR), 
+	end_station_name, end_station_id, route, start_lat, start_lng, end_lat, end_lng, member_casual, day_of_week 
+	FROM Cyclistic..['2022_04_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2022_05_v1$']
+	)
+SELECT
+COUNT(ride_id) AS number_of_trips
+FROM spring_months
+WHERE member_casual = 'member'
+GROUP BY day_of_week
+ORDER BY day_of_week
+
+
+--Count of unique routes by member type
+WITH spring_months AS (
+	SELECT * FROM Cyclistic..['2022_03_v1$']
+	UNION ALL
+	SELECT ride_id, rideable_type, started_at, ended_at, ride_length, start_station_name, CAST(start_station_id AS NCHAR), 
+	end_station_name, end_station_id, route, start_lat, start_lng, end_lat, end_lng, member_casual, day_of_week 
+	FROM Cyclistic..['2022_04_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2022_05_v1$']
+	)
+SELECT DISTINCT
+COUNT(route) AS unique_routes,
+member_casual
+FROM spring_months
+GROUP BY member_casual
+ORDER BY member_casual
+
+--usage of rideable type by member type
+WITH spring_months AS (
+	SELECT * FROM Cyclistic..['2022_03_v1$']
+	UNION ALL
+	SELECT ride_id, rideable_type, started_at, ended_at, ride_length, start_station_name, CAST(start_station_id AS NCHAR), 
+	end_station_name, end_station_id, route, start_lat, start_lng, end_lat, end_lng, member_casual, day_of_week 
+	FROM Cyclistic..['2022_04_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2022_05_v1$']
+	)
+SELECT DISTINCT rideable_type,
+COUNT(rideable_type) AS rideable_type_members
+FROM spring_months
+WHERE member_casual = 'member'
+GROUP BY rideable_type
+ORDER BY rideable_type
+
+WITH spring_months AS (
+	SELECT * FROM Cyclistic..['2022_03_v1$']
+	UNION ALL
+	SELECT ride_id, rideable_type, started_at, ended_at, ride_length, start_station_name, CAST(start_station_id AS NCHAR), 
+	end_station_name, end_station_id, route, start_lat, start_lng, end_lat, end_lng, member_casual, day_of_week 
+	FROM Cyclistic..['2022_04_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2022_05_v1$']
+	)
+SELECT DISTINCT rideable_type,
+COUNT(rideable_type) AS rideable_type_casual
+FROM spring_months
+WHERE member_casual = 'casual'
+GROUP BY rideable_type
+ORDER BY rideable_type
+
+
+--5: YEARLY ANALYSIS
+--looking at ride time trends over the year by member
+WITH yearly_view AS (
+	SELECT * FROM Cyclistic..['2021_06_trips_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['202107-divvy-tripdata$']
+	UNION ALL
+	SELECT ride_id, rideable_type, started_at, ended_at, ride_length, start_station_name, CAST(start_station_id AS NCHAR), 
+	end_station_name, CAST(end_station_id AS NCHAR), route, start_lat, start_lng, end_lat, end_lng, member_casual, day_of_week
+	FROM Cyclistic..['2021_08_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2021_09_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2021_10_v1$']
+	UNION ALL
+	SELECT ride_id, rideable_type, started_at, ended_at, ride_length, start_station_name, CAST(start_station_id AS NCHAR), 
+	end_station_name, end_station_id, route, start_lat, start_lng, end_lat, end_lng, member_casual, day_of_week
+	FROM Cyclistic..['2021_11_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2021_12_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2022_01_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2022_02_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2022_03_v1$']
+	UNION ALL
+	SELECT ride_id, rideable_type, started_at, ended_at, ride_length, start_station_name, CAST(start_station_id AS NCHAR), 
+	end_station_name, end_station_id, route, start_lat, start_lng, end_lat, end_lng, member_casual, day_of_week 
+	FROM Cyclistic..['2022_04_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2022_05_v1$']
+	) 
+SELECT ride_id, started_at, ended_at, member_casual
+FROM yearly_view
+
+--allow to see most popular routes over time, lat and lng data for geographical map
+WITH yearly_view AS (
+	SELECT * FROM Cyclistic..['2021_06_trips_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['202107-divvy-tripdata$']
+	UNION ALL
+	SELECT ride_id, rideable_type, started_at, ended_at, ride_length, start_station_name, CAST(start_station_id AS NCHAR), 
+	end_station_name, CAST(end_station_id AS NCHAR), route, start_lat, start_lng, end_lat, end_lng, member_casual, day_of_week
+	FROM Cyclistic..['2021_08_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2021_09_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2021_10_v1$']
+	UNION ALL
+	SELECT ride_id, rideable_type, started_at, ended_at, ride_length, start_station_name, CAST(start_station_id AS NCHAR), 
+	end_station_name, end_station_id, route, start_lat, start_lng, end_lat, end_lng, member_casual, day_of_week
+	FROM Cyclistic..['2021_11_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2021_12_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2022_01_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2022_02_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2022_03_v1$']
+	UNION ALL
+	SELECT ride_id, rideable_type, started_at, ended_at, ride_length, start_station_name, CAST(start_station_id AS NCHAR), 
+	end_station_name, end_station_id, route, start_lat, start_lng, end_lat, end_lng, member_casual, day_of_week 
+	FROM Cyclistic..['2022_04_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2022_05_v1$']
+	) 
+SELECT ride_id, started_at, route, start_lat, start_lng, member_casual
+FROM yearly_view
+
+
+
+--see rides per day yearly
+WITH yearly_view AS (
+	SELECT * FROM Cyclistic..['2021_06_trips_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['202107-divvy-tripdata$']
+	UNION ALL
+	SELECT ride_id, rideable_type, started_at, ended_at, ride_length, start_station_name, CAST(start_station_id AS NCHAR), 
+	end_station_name, CAST(end_station_id AS NCHAR), route, start_lat, start_lng, end_lat, end_lng, member_casual, day_of_week
+	FROM Cyclistic..['2021_08_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2021_09_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2021_10_v1$']
+	UNION ALL
+	SELECT ride_id, rideable_type, started_at, ended_at, ride_length, start_station_name, CAST(start_station_id AS NCHAR), 
+	end_station_name, end_station_id, route, start_lat, start_lng, end_lat, end_lng, member_casual, day_of_week
+	FROM Cyclistic..['2021_11_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2021_12_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2022_01_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2022_02_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2022_03_v1$']
+	UNION ALL
+	SELECT ride_id, rideable_type, started_at, ended_at, ride_length, start_station_name, CAST(start_station_id AS NCHAR), 
+	end_station_name, end_station_id, route, start_lat, start_lng, end_lat, end_lng, member_casual, day_of_week 
+	FROM Cyclistic..['2022_04_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2022_05_v1$']
+	) 
+SELECT COUNT(ride_id), CONVERT(DATE, started_at)
+FROM yearly_view
+WHERE member_casual = 'casual'
+GROUP BY CONVERT(DATE, started_at)
+ORDER BY CONVERT(DATE, started_at)
+
+
+WITH yearly_view AS (
+	SELECT * FROM Cyclistic..['2021_06_trips_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['202107-divvy-tripdata$']
+	UNION ALL
+	SELECT ride_id, rideable_type, started_at, ended_at, ride_length, start_station_name, CAST(start_station_id AS NCHAR), 
+	end_station_name, CAST(end_station_id AS NCHAR), route, start_lat, start_lng, end_lat, end_lng, member_casual, day_of_week
+	FROM Cyclistic..['2021_08_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2021_09_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2021_10_v1$']
+	UNION ALL
+	SELECT ride_id, rideable_type, started_at, ended_at, ride_length, start_station_name, CAST(start_station_id AS NCHAR), 
+	end_station_name, end_station_id, route, start_lat, start_lng, end_lat, end_lng, member_casual, day_of_week
+	FROM Cyclistic..['2021_11_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2021_12_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2022_01_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2022_02_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2022_03_v1$']
+	UNION ALL
+	SELECT ride_id, rideable_type, started_at, ended_at, ride_length, start_station_name, CAST(start_station_id AS NCHAR), 
+	end_station_name, end_station_id, route, start_lat, start_lng, end_lat, end_lng, member_casual, day_of_week 
+	FROM Cyclistic..['2022_04_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2022_05_v1$']
+	) 
+SELECT COUNT(ride_id), CONVERT(DATE, started_at)
+FROM yearly_view
+WHERE member_casual = 'member'
+GROUP BY CONVERT(DATE, started_at)
+ORDER BY CONVERT(DATE, started_at)
+
+
+
+--popular routes by member yearly 
+WITH yearly_view AS (
+	SELECT * FROM Cyclistic..['2021_06_trips_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['202107-divvy-tripdata$']
+	UNION ALL
+	SELECT ride_id, rideable_type, started_at, ended_at, ride_length, start_station_name, CAST(start_station_id AS NCHAR), 
+	end_station_name, CAST(end_station_id AS NCHAR), route, start_lat, start_lng, end_lat, end_lng, member_casual, day_of_week
+	FROM Cyclistic..['2021_08_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2021_09_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2021_10_v1$']
+	UNION ALL
+	SELECT ride_id, rideable_type, started_at, ended_at, ride_length, start_station_name, CAST(start_station_id AS NCHAR), 
+	end_station_name, end_station_id, route, start_lat, start_lng, end_lat, end_lng, member_casual, day_of_week
+	FROM Cyclistic..['2021_11_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2021_12_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2022_01_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2022_02_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2022_03_v1$']
+	UNION ALL
+	SELECT ride_id, rideable_type, started_at, ended_at, ride_length, start_station_name, CAST(start_station_id AS NCHAR), 
+	end_station_name, end_station_id, route, start_lat, start_lng, end_lat, end_lng, member_casual, day_of_week 
+	FROM Cyclistic..['2022_04_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2022_05_v1$']
+	) 
+SELECT DISTINCT route, COUNT(ride_id) AS ride_count
+FROM yearly_view
+WHERE member_casual = 'member' AND route <> ''
+GROUP BY route
+ORDER BY ride_count
+
+WITH yearly_view AS (
+	SELECT * FROM Cyclistic..['2021_06_trips_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['202107-divvy-tripdata$']
+	UNION ALL
+	SELECT ride_id, rideable_type, started_at, ended_at, ride_length, start_station_name, CAST(start_station_id AS NCHAR), 
+	end_station_name, CAST(end_station_id AS NCHAR), route, start_lat, start_lng, end_lat, end_lng, member_casual, day_of_week
+	FROM Cyclistic..['2021_08_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2021_09_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2021_10_v1$']
+	UNION ALL
+	SELECT ride_id, rideable_type, started_at, ended_at, ride_length, start_station_name, CAST(start_station_id AS NCHAR), 
+	end_station_name, end_station_id, route, start_lat, start_lng, end_lat, end_lng, member_casual, day_of_week
+	FROM Cyclistic..['2021_11_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2021_12_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2022_01_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2022_02_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2022_03_v1$']
+	UNION ALL
+	SELECT ride_id, rideable_type, started_at, ended_at, ride_length, start_station_name, CAST(start_station_id AS NCHAR), 
+	end_station_name, end_station_id, route, start_lat, start_lng, end_lat, end_lng, member_casual, day_of_week 
+	FROM Cyclistic..['2022_04_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2022_05_v1$']
+	) 
+SELECT DISTINCT route, COUNT(ride_id) AS ride_count
+FROM yearly_view
+WHERE member_casual = 'casual' AND route <> ''
+GROUP BY route
+ORDER BY ride_count
+
+
+
+--6: CREATING VIEWS
+--Creating views for later visualizations
+
+CREATE VIEW popular_routes_and_lat_long AS
+WITH yearly_view AS (
+	SELECT * FROM Cyclistic..['2021_06_trips_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['202107-divvy-tripdata$']
+	UNION ALL
+	SELECT ride_id, rideable_type, started_at, ended_at, ride_length, start_station_name, CAST(start_station_id AS NCHAR), 
+	end_station_name, CAST(end_station_id AS NCHAR), route, start_lat, start_lng, end_lat, end_lng, member_casual, day_of_week
+	FROM Cyclistic..['2021_08_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2021_09_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2021_10_v1$']
+	UNION ALL
+	SELECT ride_id, rideable_type, started_at, ended_at, ride_length, start_station_name, CAST(start_station_id AS NCHAR), 
+	end_station_name, end_station_id, route, start_lat, start_lng, end_lat, end_lng, member_casual, day_of_week
+	FROM Cyclistic..['2021_11_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2021_12_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2022_01_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2022_02_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2022_03_v1$']
+	UNION ALL
+	SELECT ride_id, rideable_type, started_at, ended_at, ride_length, start_station_name, CAST(start_station_id AS NCHAR), 
+	end_station_name, end_station_id, route, start_lat, start_lng, end_lat, end_lng, member_casual, day_of_week 
+	FROM Cyclistic..['2022_04_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2022_05_v1$']
+	) 
+SELECT ride_id, started_at, route, start_lat, start_lng, member_casual
+FROM yearly_view
+
+
+CREATE VIEW daily_rides_yearly AS
+WITH yearly_view AS (
+	SELECT * FROM Cyclistic..['2021_06_trips_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['202107-divvy-tripdata$']
+	UNION ALL
+	SELECT ride_id, rideable_type, started_at, ended_at, ride_length, start_station_name, CAST(start_station_id AS NCHAR), 
+	end_station_name, CAST(end_station_id AS NCHAR), route, start_lat, start_lng, end_lat, end_lng, member_casual, day_of_week
+	FROM Cyclistic..['2021_08_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2021_09_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2021_10_v1$']
+	UNION ALL
+	SELECT ride_id, rideable_type, started_at, ended_at, ride_length, start_station_name, CAST(start_station_id AS NCHAR), 
+	end_station_name, end_station_id, route, start_lat, start_lng, end_lat, end_lng, member_casual, day_of_week
+	FROM Cyclistic..['2021_11_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2021_12_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2022_01_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2022_02_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2022_03_v1$']
+	UNION ALL
+	SELECT ride_id, rideable_type, started_at, ended_at, ride_length, start_station_name, CAST(start_station_id AS NCHAR), 
+	end_station_name, end_station_id, route, start_lat, start_lng, end_lat, end_lng, member_casual, day_of_week 
+	FROM Cyclistic..['2022_04_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2022_05_v1$']
+	) 
+SELECT COUNT(ride_id) AS ride_count, CONVERT(DATE, started_at) AS 'date'
+FROM yearly_view
+WHERE member_casual = 'casual'
+GROUP BY started_at
+
+CREATE VIEW daily_rides_yearly AS
+WITH yearly_view AS (
+	SELECT * FROM Cyclistic..['2021_06_trips_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['202107-divvy-tripdata$']
+	UNION ALL
+	SELECT ride_id, rideable_type, started_at, ended_at, ride_length, start_station_name, CAST(start_station_id AS NCHAR), 
+	end_station_name, CAST(end_station_id AS NCHAR), route, start_lat, start_lng, end_lat, end_lng, member_casual, day_of_week
+	FROM Cyclistic..['2021_08_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2021_09_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2021_10_v1$']
+	UNION ALL
+	SELECT ride_id, rideable_type, started_at, ended_at, ride_length, start_station_name, CAST(start_station_id AS NCHAR), 
+	end_station_name, end_station_id, route, start_lat, start_lng, end_lat, end_lng, member_casual, day_of_week
+	FROM Cyclistic..['2021_11_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2021_12_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2022_01_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2022_02_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2022_03_v1$']
+	UNION ALL
+	SELECT ride_id, rideable_type, started_at, ended_at, ride_length, start_station_name, CAST(start_station_id AS NCHAR), 
+	end_station_name, end_station_id, route, start_lat, start_lng, end_lat, end_lng, member_casual, day_of_week 
+	FROM Cyclistic..['2022_04_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2022_05_v1$']
+	) 
+SELECT COUNT(ride_id) AS ride_count, CONVERT(DATE, started_at) AS 'date'
+FROM yearly_view
+WHERE member_casual = 'member'
+GROUP BY started_at
+
+CREATE VIEW ride_time_trends_yearly AS
+WITH yearly_view AS (
+	SELECT * FROM Cyclistic..['2021_06_trips_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['202107-divvy-tripdata$']
+	UNION ALL
+	SELECT ride_id, rideable_type, started_at, ended_at, ride_length, start_station_name, CAST(start_station_id AS NCHAR), 
+	end_station_name, CAST(end_station_id AS NCHAR), route, start_lat, start_lng, end_lat, end_lng, member_casual, day_of_week
+	FROM Cyclistic..['2021_08_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2021_09_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2021_10_v1$']
+	UNION ALL
+	SELECT ride_id, rideable_type, started_at, ended_at, ride_length, start_station_name, CAST(start_station_id AS NCHAR), 
+	end_station_name, end_station_id, route, start_lat, start_lng, end_lat, end_lng, member_casual, day_of_week
+	FROM Cyclistic..['2021_11_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2021_12_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2022_01_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2022_02_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2022_03_v1$']
+	UNION ALL
+	SELECT ride_id, rideable_type, started_at, ended_at, ride_length, start_station_name, CAST(start_station_id AS NCHAR), 
+	end_station_name, end_station_id, route, start_lat, start_lng, end_lat, end_lng, member_casual, day_of_week 
+	FROM Cyclistic..['2022_04_v1$']
+	UNION ALL
+	SELECT * FROM Cyclistic..['2022_05_v1$']
+	) 
+SELECT ride_id, started_at, ended_at, member_casual
+FROM yearly_view
