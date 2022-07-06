@@ -1,3 +1,4 @@
+
 Select *
 From [Portfolio Covid]..['covid-deaths$']
 --WHERE continent is not null
