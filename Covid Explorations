@@ -1,0 +1,255 @@
+Select *
+From [Portfolio Covid]..['covid-deaths$']
+--WHERE continent is not null
+order by 3,4
+
+--Select *
+--From [Portfolio Covid]..['covid-vaccinations$']
+--order by 3,4
+--Select data that we are going to be using
+
+SELECT
+	location, date, total_cases, new_cases, total_deaths, population
+FROM [Portfolio Covid]..['covid-deaths$']
+WHERE continent is not null
+ORDER BY 1, 2
+
+--Looking at the Total Cases vs Total Deaths
+--Shows the likelihood of dying if you contract COVID in your country
+
+SELECT
+	location, date, total_cases, total_deaths, (total_deaths/total_cases)*100 AS death_percentage
+FROM [Portfolio Covid]..['covid-deaths$']
+WHERE location like '%states%', continent is not null
+ORDER BY 1, 2
+
+--Looking at total_cases vs population
+
+SELECT
+	location, date, total_cases, population, (total_cases/population)*100 AS cases_percentage
+FROM [Portfolio Covid]..['covid-deaths$']
+WHERE location like '%states%'
+ORDER BY 1, 2
+
+--Looking at countries with highest infection rate compared to population
+
+SELECT
+	location, population, MAX(total_cases) AS highest_infection_count, MAX((total_cases/population))*100 AS percent_of_population_infected
+FROM [Portfolio Covid]..['covid-deaths$']
+WHERE continent is not null
+GROUP BY population, location 
+ORDER BY percent_of_population_infected DESC
+
+--Showing countries with highest death count per population
+
+SELECT
+	location, MAX(cast(total_deaths as int)) AS total_death_count
+FROM [Portfolio Covid]..['covid-deaths$']
+WHERE continent is not null
+GROUP BY location 
+ORDER BY total_death_count DESC
+
+--Added 'WHERE continent is not null' because the list was including groupings of continents and regions.
+--Let's examine continents
+--This is a good one to put into a view for Tableau
+
+SELECT
+	location, MAX(cast(total_deaths as int)) AS total_death_count
+FROM [Portfolio Covid]..['covid-deaths$']
+WHERE continent is not null
+GROUP BY location
+ORDER BY total_death_count DESC
+
+--Question of if we select continent vs location, as well as not null vs null. Not sure which is more correct.
+
+
+--Global numbers total deaths, cases, and death percentage per case by date
+
+SELECT
+	date, SUM(new_cases) AS total_cases, SUM(cast(new_deaths AS INT)) AS total_deaths, SUM(cast(new_deaths AS INT))/SUM(new_cases)*100 AS death_percentage --total_cases, total_deaths, (total_deaths/total_cases)*100 AS death_percentage_of_cases
+FROM [Portfolio Covid]..['covid-deaths$']
+WHERE continent is not null
+GROUP BY date
+ORDER BY 1, 2
+
+--Global total deaths, cases, and death percentage per case.
+
+SELECT
+	SUM(new_cases) AS total_cases, SUM(cast(new_deaths AS INT)) AS total_deaths, SUM(cast(new_deaths AS INT))/SUM(new_cases)*100 AS death_percentage --total_cases, total_deaths, (total_deaths/total_cases)*100 AS death_percentage_of_cases
+FROM [Portfolio Covid]..['covid-deaths$']
+WHERE continent is not null
+ORDER BY 1, 2
+
+--Looking at vaccinations table
+
+SELECT
+	*
+FROM [Portfolio Covid]..['covid-vaccinations$']
+
+--Joining tables by location and date.
+
+SELECT
+	*
+FROM [Portfolio Covid]..['covid-deaths$'] dea
+JOIN ['covid-vaccinations$'] vac
+	ON dea.location = vac.location
+	AND dea.date = vac.date
+
+--Total population vs vaccinations
+
+SELECT
+	dea.continent, dea.location, dea.date, dea.population, vac.new_vaccinations
+FROM [Portfolio Covid]..['covid-deaths$'] dea
+JOIN ['covid-vaccinations$'] vac
+	ON dea.location = vac.location
+	AND dea.date = vac.date
+WHERE dea.continent is not null
+ORDER BY 1, 2, 3
+--changed ORDER BY 1, 2, 3, to 2, 3, so that Afganastahn is first instead of Algeria, ordered by location alphabetically
+--Make a rolling count of vaccinations!
+--partition by = breaking it up by
+--casting new_vaccinations to int brought error, the number is too big so used BIGINT instead
+
+SELECT
+	dea.continent, dea.location, dea.date, dea.population, vac.new_vaccinations, SUM(CAST(vac.new_vaccinations AS BIGINT)) OVER (PARTITION BY dea.location ORDER BY dea.location, dea.date) AS rolling_pop_vac
+FROM [Portfolio Covid]..['covid-deaths$'] dea
+JOIN ['covid-vaccinations$'] vac
+	ON dea.location = vac.location
+	AND dea.date = vac.date
+WHERE dea.continent is not null
+ORDER BY 2, 3
+
+--Want to create a percentage of rolling pop vac, but can't doing a newly created column. 
+--Options: CTE or temporary table
+
+--CTE option
+--Number of columns in WITH has to match the SELECT columns
+--it couldn't have ORDER BY, error, took out
+
+WITH pop_perc_vac (continent, location, date, population, new_vaccinations, rolling_pop_vac)
+AS 
+(
+SELECT
+	dea.continent, dea.location, dea.date, dea.population, vac.new_vaccinations, SUM(CAST(vac.new_vaccinations AS BIGINT)) OVER (PARTITION BY dea.location ORDER BY dea.location, dea.date) AS rolling_pop_vac
+FROM [Portfolio Covid]..['covid-deaths$'] dea
+JOIN ['covid-vaccinations$'] vac
+	ON dea.location = vac.location
+	AND dea.date = vac.date
+WHERE dea.continent is not null
+)
+SELECT
+	*
+FROM pop_perc_vac
+
+--Now to add the percentage functions using the CTE
+
+WITH pop_perc_vac (continent, location, date, population, new_vaccinations, rolling_pop_vac)
+AS 
+(
+SELECT
+	dea.continent, dea.location, dea.date, dea.population, vac.new_vaccinations, SUM(CAST(vac.new_vaccinations AS BIGINT)) OVER (PARTITION BY dea.location ORDER BY dea.location, dea.date) AS rolling_pop_vac
+FROM [Portfolio Covid]..['covid-deaths$'] dea
+JOIN ['covid-vaccinations$'] vac
+	ON dea.location = vac.location
+	AND dea.date = vac.date
+WHERE dea.continent is not null
+)
+SELECT
+	*, (rolling_pop_vac/population)*100 AS perc_rolling_pop_vac
+FROM pop_perc_vac
+
+--Why are some countries over 200%? Is it because of the new vaccinations include second doses and boosts? Are my calculations correct?
+
+-- Temporary Table
+
+CREATE TABLE #percent_population_vaccinated
+(
+continent NVARCHAR(255), 
+location NVARCHAR(255),
+date datetime, 
+population numeric,
+new_vaccinations numeric, 
+rolling_pop_vac numeric
+)
+--previously written from above
+INSERT INTO #percent_population_vaccinated
+SELECT
+	dea.continent, dea.location, dea.date, dea.population, vac.new_vaccinations, SUM(CAST(vac.new_vaccinations AS BIGINT)) OVER (PARTITION BY dea.location ORDER BY dea.location, dea.date) AS rolling_pop_vac
+FROM [Portfolio Covid]..['covid-deaths$'] dea
+JOIN ['covid-vaccinations$'] vac
+	ON dea.location = vac.location
+	AND dea.date = vac.date
+WHERE dea.continent is not null
+
+--previously written from above, update FROM to current table name and INSERT INTO
+SELECT
+	*, (rolling_pop_vac/population)*100 AS perc_rolling_pop_vac
+FROM #percent_population_vaccinated
+
+--Added "drop table if exists" and name as a failsafe. If make changes, even if correct, gives error. This protects, prevents from other needs for other kinds of drops. (also looks good to folks)
+--Final create temp table
+
+DROP TABLE IF exists #percent_population_vaccinated
+CREATE TABLE #percent_population_vaccinated
+(
+continent NVARCHAR(255), 
+location NVARCHAR(255),
+date datetime, 
+population numeric,
+new_vaccinations numeric, 
+rolling_pop_vac numeric
+)
+
+INSERT INTO #percent_population_vaccinated
+SELECT
+	dea.continent, dea.location, dea.date, dea.population, vac.new_vaccinations, SUM(CAST(vac.new_vaccinations AS BIGINT)) OVER (PARTITION BY dea.location ORDER BY dea.location, dea.date) AS rolling_pop_vac
+FROM [Portfolio Covid]..['covid-deaths$'] dea
+JOIN ['covid-vaccinations$'] vac
+	ON dea.location = vac.location
+	AND dea.date = vac.date
+WHERE dea.continent is not null
+
+SELECT
+	*, (rolling_pop_vac/population)*100 AS perc_rolling_pop_vac
+FROM #percent_population_vaccinated
+
+
+--Creating views to store data for later visualization
+
+CREATE VIEW percent_population_vaccinated AS 
+SELECT
+	dea.continent, dea.location, dea.date, dea.population, vac.new_vaccinations, SUM(CAST(vac.new_vaccinations AS BIGINT)) OVER (PARTITION BY dea.location ORDER BY dea.location, dea.date) AS rolling_pop_vac
+FROM [Portfolio Covid]..['covid-deaths$'] dea
+JOIN ['covid-vaccinations$'] vac
+	ON dea.location = vac.location
+	AND dea.date = vac.date
+WHERE dea.continent is not null
+
+--Looking at the Total Cases vs Total Deaths
+--Shows the likelihood of dying if you contract COVID in your country
+
+CREATE VIEW total_cases_vs_total_deaths AS
+SELECT
+	location, date, total_cases, total_deaths, (total_deaths/total_cases)*100 AS death_percentage
+FROM [Portfolio Covid]..['covid-deaths$']
+WHERE continent is not null
+
+
+--Looking at countries with highest infection rate compared to population
+
+CREATE VIEW countries_highest_infection_rate_vs_population AS
+SELECT
+	location, population, MAX(total_cases) AS highest_infection_count, MAX((total_cases/population))*100 AS percent_of_population_infected
+FROM [Portfolio Covid]..['covid-deaths$']
+WHERE continent is not null
+GROUP BY population, location 
+
+
+--Showing countries with highest death count per population
+
+CREATE VIEW highest_deaths_per_population AS
+SELECT
+	location, MAX(cast(total_deaths as int)) AS total_death_count
+FROM [Portfolio Covid]..['covid-deaths$']
+WHERE continent is not null
+GROUP BY location
